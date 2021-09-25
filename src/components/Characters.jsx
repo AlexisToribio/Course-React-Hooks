@@ -1,22 +1,26 @@
 import React, {
   useState,
-  useEffect,
   useContext,
   useReducer,
   useMemo,
+  useRef,
+  useCallback,
 } from "react";
 import {
   CharactersContainer,
   CharacterCard,
-  SearchContainer,
   FavoriteContainer,
   FavoritesCharacter,
 } from "./styles/Characters";
 import ThemeContext from "../context/ThemeContext";
+import Search from "./Search";
+import useCharacters from "../hooks/useCharacters";
 
 const initialState = {
   favorites: [],
 };
+
+const API = "https://rickandmortyapi.com/api/character/";
 
 const favoriteReducer = (state, action) => {
   switch (action.type) {
@@ -31,24 +35,31 @@ const favoriteReducer = (state, action) => {
 };
 
 export default function Characters() {
-  const [characters, setCharacters] = useState([]);
+  // const [characters, setCharacters] = useState([]);
   const [favorites, dispatch] = useReducer(favoriteReducer, initialState);
   const { darkMode } = useContext(ThemeContext);
   const [search, setSearch] = useState("");
+  const searchInput = useRef(null);
 
-  useEffect(() => {
-    fetch("https://rickandmortyapi.com/api/character/")
-      .then((response) => response.json())
-      .then((data) => setCharacters(data.results));
-  }, []);
+  const characters = useCharacters(API);
+
+  // useEffect(() => {
+  //   fetch("https://rickandmortyapi.com/api/character/")
+  //     .then((response) => response.json())
+  //     .then((data) => setCharacters(data.results));
+  // }, []);
 
   const handleClick = (favorite) => {
     dispatch({ type: "ADD_TO_FAVORITE", payload: favorite });
   };
 
-  const handleSearch = (event) => {
-    setSearch(event.target.value);
-  };
+  // const handleSearch = () => {
+  //   setSearch(searchInput.current.value);
+  // };
+
+  const handleSearch = useCallback(() => {
+    setSearch(searchInput.current.value);
+  }, []);
 
   // const filteredUsers = characters.filter((user) => {
   //   return user.name.toLowerCase().includes(search.toLowerCase());
@@ -77,14 +88,12 @@ export default function Characters() {
         </FavoritesCharacter>
       </FavoriteContainer>
 
-      <SearchContainer darkMode={darkMode}>
-        <input
-          type="text"
-          value={search}
-          onChange={handleSearch}
-          placeholder="Ingrese el nombre del personaje"
-        />
-      </SearchContainer>
+      <Search
+        search={search}
+        searchInput={searchInput}
+        handleSearch={handleSearch}
+        darkMode={darkMode}
+      />
 
       {filteredUsers.map((character) => (
         <CharacterCard darkMode={darkMode} key={character.id}>
